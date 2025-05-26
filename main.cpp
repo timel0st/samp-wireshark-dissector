@@ -1,6 +1,6 @@
 #include "main.h"
 #include "encryption.h"
-#include "rak_minimal/StringCompressor.h"
+#include "raknet/StringCompressor.h"
 
 void init_rpc_fields(int dissector);
 
@@ -299,7 +299,7 @@ extern "C" {
 
     void plugin_register(void)
     {
-        StringCompressor::AddReference();
+        RakNet::StringCompressor::AddReference();
 
         reassembly_table_register(&msg_reassembly_table, &addresses_reassembly_table_functions);
 

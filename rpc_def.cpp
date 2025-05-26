@@ -1,7 +1,7 @@
-#include "rak_minimal/DS_RangeList.h"
+#include "raknet/DS_RangeList.h"
 #include "main.h"
 #include "rpc_def.h"
-#include "rak_minimal/StringCompressor.h"
+#include "raknet/StringCompressor.h"
 
 //samp query
 int samp_query_magic = -1;
@@ -3268,7 +3268,7 @@ void dissect_create_object(tvbuff_t* tvb, packet_info* pinfo, proto_tree* tree _
 				bs.Read(alignment);
 				proto_tree_add_uint(tree, createobject_attachoffset_material_type2_alignment, tvb, offset, sizeof(uint8_t), alignment); offset = BITS_TO_BYTES(bs.GetReadOffset());
 
-				if (StringCompressor::Instance()->DecodeString(text, sizeof(text), &bs)) {
+				if (RakNet::StringCompressor::Instance()->DecodeString(text, sizeof(text), &bs)) {
 					proto_tree_add_string(tree, createobject_attachoffset_material_type2_textOrTXD, tvb, offset, text_len, text); offset = BITS_TO_BYTES(bs.GetReadOffset());
 				}
 			}
@@ -3384,7 +3384,7 @@ void dissect_set_object_material_text(tvbuff_t* tvb, packet_info* pinfo, proto_t
 			bs.Read(alignment);
 			proto_tree_add_uint(tree, setplayerobjectmaterial_material_text_alignment, tvb, offset, sizeof(uint8_t), alignment); offset = BITS_TO_BYTES(bs.GetReadOffset());
 
-			if (StringCompressor::Instance()->DecodeString(text, sizeof(text), &bs)) {
+			if (RakNet::StringCompressor::Instance()->DecodeString(text, sizeof(text), &bs)) {
 				proto_tree_add_string(tree, setplayerobjectmaterial_material_text_textOrTXD, tvb, offset, text_len, text); offset = BITS_TO_BYTES(bs.GetReadOffset());
 			}
 		}

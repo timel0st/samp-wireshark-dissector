@@ -1,4 +1,4 @@
-#include "rak_minimal/DS_RangeList.h"
+#include "raknet/DS_RangeList.h"
 
 
 #include "main.h"
@@ -52,7 +52,7 @@ void dissect_samprpc_message_raknet(tvbuff_t *tvb, packet_info *pinfo, proto_tre
     RakNet::BitStream bs;
     bs.Write(original_buffer, orig_size);
 
-    DataStructures::RangeList<uint16_t> acknowlegements;
+    RakNet::DataStructures::RangeList<uint16_t> acknowlegements;
 
     bool has_acks = false;
     bs.Read(has_acks);

@@ -1,7 +1,7 @@
 #include "main.h"
 #include "msgids.h"
-#include "rak_minimal/DS_RangeList.h"
-#include "rak_minimal/StringCompressor.h"
+#include "raknet/DS_RangeList.h"
+#include "raknet/StringCompressor.h"
 #include "rpc_def.h"
 
 extern int rpcid_field;
@@ -84,7 +84,7 @@ void dissect_samprpc_message_raknet_rpc_inner(tvbuff_t *tvb, packet_info *pinfo,
 				break;
 				case EVariableType_LenStr_Compressed:
 				c = bs.GetNumberOfBytesUsed();
-				if (StringCompressor::Instance()->DecodeString(string_value, sizeof(string_value), &bs)) {
+				if (RakNet::StringCompressor::Instance()->DecodeString(string_value, sizeof(string_value), &bs)) {
 					proto_tree_add_string(tree, rpc_field->wireshark_field_id, tvb, offset, bs.GetNumberOfBytesUsed() - c, string_value); offset += bs.GetNumberOfBytesUsed() - c;
 				}
 				break;

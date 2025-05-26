@@ -26,6 +26,7 @@
 #include "RakNetDefines.h"
 #include "Export.h"
 #include "NetworkTypes.h"
+#include "RakAssert.h"
 #include <assert.h>
 #include <math.h>
 #include <float.h>
@@ -375,7 +376,7 @@ namespace RakNet
 		inline void SetReadOffset( int newReadOffset ) {readOffset=newReadOffset;}
 		
 		///Returns the number of bits left in the stream that haven't been read
-		inline int GetNumberOfUnreadBits( void ) const {return numberOfBitsUsed - readOffset;}
+		inline int GetNumberOfUnreadBits( void ) const { return readOffset > numberOfBitsUsed ? 0 : numberOfBitsUsed - readOffset; }
 		
 		/// Makes a copy of the internal data for you \a _data will point to
 		/// the stream. Returns the length in bits of the stream. Partial
@@ -404,7 +405,7 @@ namespace RakNet
 		void WriteBits( const unsigned char* input,	int numberOfBitsToWrite, const bool rightAlignedBits = true );
 		
 		/// Align the bitstream to the byte boundary and then write the
-		/// specified number of bits.  This is faster than WriteBits but
+		/// specified number of bits.  This is faster than DoWriteBits but
 		/// wastes the bits to do the alignment and requires you to call
 		/// ReadAlignedBits at the corresponding read position.
 		/// \param[in] input The data
@@ -413,7 +414,7 @@ namespace RakNet
 		
 		/// Read bits, starting at the next aligned bits. Note that the
 		/// modulus 8 starting offset of the sequence must be the same as
-		/// was used with WriteBits. This will be a problem with packet
+		/// was used with DoWriteBits. This will be a problem with packet
 		/// coalescence unless you byte align the coalesced packets.
 		/// \param[in] output The byte array larger than @em numberOfBytesToRead
 		/// \param[in] numberOfBytesToRead The number of byte to read from the internal state 
@@ -426,7 +427,7 @@ namespace RakNet
 		/// boundaries so so WriteAlignedBits and ReadAlignedBits both
 		/// calculate the same offset when aligning.
 		void AlignWriteToByteBoundary( void );
-				
+		
 		/// Align the next write and/or read to a byte boundary.  This can
 		/// be used to 'waste' bits to byte align for efficiency reasons It
 		/// can also be used to force coalesced bitstreams to start on byte
@@ -437,7 +438,7 @@ namespace RakNet
 		/// Read \a numberOfBitsToRead bits to the output source
 		/// alignBitsToRight should be set to true to convert internal
 		/// bitstream data to userdata. It should be false if you used
-		/// WriteBits with rightAlignedBits false
+		/// DoWriteBits with rightAlignedBits false
 		/// \param[in] output The resulting bits array 
 		/// \param[in] numberOfBitsToRead The number of bits to read 
 		/// \param[in] alignBitsToRight if true bits will be right aligned. 
@@ -593,6 +594,9 @@ namespace RakNet
 		
 		/// true if the internal buffer is copy of the data passed to the constructor
 		bool copyData;
+
+		/// BitStreams that use less than BITSTREAM_STACK_ALLOCATION_SIZE use the stack, rather than the heap to store data.  It switches over if BITSTREAM_STACK_ALLOCATION_SIZE is exceeded
+		unsigned char stackData[BITSTREAM_STACK_ALLOCATION_SIZE];
 	};
 
 		template <class templateType>
@@ -902,7 +906,7 @@ namespace RakNet
 	template <>
 		inline void BitStream::WriteCompressed(float var)
 	{
-		assert(var > -1.01f && var < 1.01f);
+		//RakAssert(var > -1.01f && var < 1.01f);
 		if (var < -1.0f)
 			var=-1.0f;
 		if (var > 1.0f)
@@ -914,14 +918,14 @@ namespace RakNet
 	template <>
 		inline void BitStream::WriteCompressed(double var)
 	{
-		assert(var > -1.01 && var < 1.01);
+		RakAssert(var > -1.01 && var < 1.01);
 		if (var < -1.0f)
 			var=-1.0f;
 		if (var > 1.0f)
 			var=1.0f;
-#ifdef _DEBUG
-		assert(sizeof(unsigned long)==4);
-#endif
+
+		RakAssert(sizeof(unsigned long)==4);
+
 		Write((unsigned long)((var+1.0)*2147483648.0));
 	}
 
@@ -1010,13 +1014,15 @@ namespace RakNet
 	template <>
 		inline bool BitStream::Read(bool &var)
 	{
-		if ( readOffset + 1 > numberOfBitsUsed )
+		if (GetNumberOfUnreadBits() == 0)
 			return false;
 
-		if ( data[ readOffset >> 3 ] & ( 0x80 >> ( readOffset++ % 8 ) ) )   // Is it faster to just write it out here?
+		if ( data[ readOffset >> 3 ] & ( 0x80 >> ( readOffset % 8 ) ) )   // Is it faster to just write it out here?
 			var = true;
 		else
 			var = false;
+
+		++readOffset;
 
 		return true;
 	}
@@ -1171,9 +1177,9 @@ namespace RakNet
 	template <class templateType> // templateType for this function must be a float or double
 		void BitStream::WriteNormVector( templateType x, templateType y, templateType z )
 	{
-#ifdef _DEBUG
-		assert(x <= 1.01 && y <= 1.01 && z <= 1.01 && x >= -1.01 && y >= -1.01 && z >= -1.01);
-#endif
+
+		RakAssert(x <= 1.01 && y <= 1.01 && z <= 1.01 && x >= -1.01 && y >= -1.01 && z >= -1.01);
+
 		if (x>1.0)
 			x=1.0;
 		if (y>1.0)

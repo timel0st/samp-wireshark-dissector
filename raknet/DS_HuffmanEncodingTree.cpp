@@ -19,27 +19,29 @@
 #include "BitStream.h"
 #include <assert.h> 
 
+using namespace RakNet;
+
 #ifdef _MSC_VER
 #pragma warning( push )
 #endif
 
-HuffmanEncodingTree::HuffmanEncodingTree()
+DataStructures::HuffmanEncodingTree::HuffmanEncodingTree()
 {
 	root = 0;
 }
 
-HuffmanEncodingTree::~HuffmanEncodingTree()
+DataStructures::HuffmanEncodingTree::~HuffmanEncodingTree()
 {
 	FreeMemory();
 }
 
-void HuffmanEncodingTree::FreeMemory( void )
+void DataStructures::HuffmanEncodingTree::FreeMemory( void )
 {
 	if ( root == 0 )
 		return ;
 		
 	// Use an in-order traversal to delete the tree
-	DataStructures::Queue<HuffmanEncodingTreeNode *> nodeQueue;
+	Queue<HuffmanEncodingTreeNode *> nodeQueue;
 	
 	HuffmanEncodingTreeNode *node;
 	
@@ -69,13 +71,13 @@ void HuffmanEncodingTree::FreeMemory( void )
 ////#include <stdio.h>
 
 // Given a frequency table of 256 elements, all with a frequency of 1 or more, generate the tree
-void HuffmanEncodingTree::GenerateFromFrequencyTable( unsigned int frequencyTable[ 256 ] )
+void DataStructures::HuffmanEncodingTree::GenerateFromFrequencyTable( unsigned int frequencyTable[ 256 ] )
 {
 	int counter;
 	HuffmanEncodingTreeNode * node;
 	HuffmanEncodingTreeNode *leafList[ 256 ]; // Keep a copy of the pointers to all the leaves so we can generate the encryption table bottom-up, which is easier
 	// 1.  Make 256 trees each with a weight equal to the frequency of the corresponding character
-	DataStructures::LinkedList<HuffmanEncodingTreeNode *> huffmanEncodingTreeNodeList;
+	LinkedList<HuffmanEncodingTreeNode *> huffmanEncodingTreeNodeList;
 	
 	FreeMemory();
 	
@@ -172,7 +174,7 @@ void HuffmanEncodingTree::GenerateFromFrequencyTable( unsigned int frequencyTabl
 }
 
 // Pass an array of bytes to array and a preallocated BitStream to receive the output
-void HuffmanEncodingTree::EncodeArray( unsigned char *input, unsigned sizeInBytes, RakNet::BitStream * output )
+void DataStructures::HuffmanEncodingTree::EncodeArray( unsigned char *input, unsigned sizeInBytes, RakNet::BitStream * output )
 {		
 	unsigned counter;
 	
@@ -195,15 +197,15 @@ void HuffmanEncodingTree::EncodeArray( unsigned char *input, unsigned sizeInByte
 				break;
 			}
 			
-#ifdef _DEBUG
-		assert( counter != 256 );  // Given 256 elements, we should always be able to find an input that would be >= 7 bits
+
+		RakAssert( counter != 256 );  // Given 256 elements, we should always be able to find an input that would be >= 7 bits
 		
-#endif
+
 		
 	}
 }
 
-unsigned HuffmanEncodingTree::DecodeArray( RakNet::BitStream * input, unsigned sizeInBits, unsigned maxCharsToWrite, unsigned char *output )
+unsigned DataStructures::HuffmanEncodingTree::DecodeArray( RakNet::BitStream * input, unsigned & sizeInBits, unsigned maxCharsToWrite, unsigned char *output, bool skip )
 {
 	HuffmanEncodingTreeNode * currentNode;
 	
@@ -212,9 +214,20 @@ unsigned HuffmanEncodingTree::DecodeArray( RakNet::BitStream * input, unsigned s
 	currentNode = root;
 	
 	// For each bit, go left if it is a 0 and right if it is a 1.  When we reach a leaf, that gives us the desired value and we restart from the root
-	
-	for ( unsigned counter = 0; counter < sizeInBits; counter++ )
+
+	while ( sizeInBits )
 	{
+		if ( outputWriteIndex == maxCharsToWrite )
+		{
+			if ( skip )
+			{
+				input->IgnoreBits( sizeInBits );
+				sizeInBits = 0;
+			}
+
+			return maxCharsToWrite;
+		}
+
 		if ( input->ReadBit() == false )   // left!
 			currentNode = currentNode->left;
 		else
@@ -222,21 +235,21 @@ unsigned HuffmanEncodingTree::DecodeArray( RakNet::BitStream * input, unsigned s
 			
 		if ( currentNode->left == 0 && currentNode->right == 0 )   // Leaf
 		{
-		
-			if ( outputWriteIndex < maxCharsToWrite )
-				output[ outputWriteIndex ] = currentNode->value;
+			output[ outputWriteIndex ] = currentNode->value;
 				
 			outputWriteIndex++;
 			
 			currentNode = root;
 		}
+
+		--sizeInBits;
 	}
 	
 	return outputWriteIndex;
 }
 
 // Pass an array of encoded bytes to array and a preallocated BitStream to receive the output
-void HuffmanEncodingTree::DecodeArray( unsigned char *input, unsigned sizeInBits, RakNet::BitStream * output )
+void DataStructures::HuffmanEncodingTree::DecodeArray( unsigned char *input, unsigned sizeInBits, RakNet::BitStream * output )
 {
 	HuffmanEncodingTreeNode * currentNode;
 	
@@ -257,14 +270,14 @@ void HuffmanEncodingTree::DecodeArray( unsigned char *input, unsigned sizeInBits
 			
 		if ( currentNode->left == 0 && currentNode->right == 0 )   // Leaf
 		{
-			output->WriteBits( &( currentNode->value ), sizeof( char ) * 8, true ); // Use WriteBits instead of Write(char) because we want to avoid TYPE_CHECKING
+			output->WriteBits( &( currentNode->value ), sizeof( char ) * 8, true ); // Use DoWriteBits instead of Write(char) because we want to avoid TYPE_CHECKING
 			currentNode = root;
 		}
 	}
 }
 
 // Insertion sort.  Slow but easy to write in this case
-void HuffmanEncodingTree::InsertNodeIntoSortedList( HuffmanEncodingTreeNode * node, DataStructures::LinkedList<HuffmanEncodingTreeNode *> *huffmanEncodingTreeNodeList ) const
+void DataStructures::HuffmanEncodingTree::InsertNodeIntoSortedList( HuffmanEncodingTreeNode * node, LinkedList<HuffmanEncodingTreeNode *> *huffmanEncodingTreeNodeList ) const
 {
 	if ( huffmanEncodingTreeNodeList->Size() == 0 )
 	{

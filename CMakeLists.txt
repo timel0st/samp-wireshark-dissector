@@ -7,7 +7,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 file (GLOB MAIN_SRCS "*.c" "*.cpp")
 file (GLOB MAIN_HDRS "*.h")
 
-file (GLOB RAKNET_SRCS "rak_minimal/*.cpp")
+file (GLOB RAKNET_SRCS "raknet/*.cpp")
 
 set (ALL_SRCS ${MAIN_SRCS} ${MAIN_HDRS} ${RAKNET_SRCS})
 
