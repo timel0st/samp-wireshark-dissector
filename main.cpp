@@ -39,6 +39,9 @@ extern int samp_query_ping_identifier;
 extern int samp_query_rcon_password;
 extern int samp_query_rcon_message;
 
+int proto_samprpc = -1;
+gint samp_ett_foo = -1;
+
 
 extern "C" {
 

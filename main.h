@@ -21,8 +21,8 @@
 #define SAMP_QUERY_MAGIC 0x53414d50
 
 extern gint list_req_ett_foo;
-
 extern int proto_samprpc;
+extern gint samp_ett_foo;
 
 typedef struct {
 	int seq_id;
@@ -54,7 +54,7 @@ void dissect_samprpc_message_raknet_spectator_sync(tvbuff_t *tvb, packet_info *p
 void dissect_samprpc_message_raknet_passenger_sync(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree _U_, void *data _U_);
 void dissect_samprpc_message_raknet_trailer_sync(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree _U_, void *data _U_);
 void dissect_samprpc_message_raknet_weapons_update(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree _U_, void *data _U_);
-extern gint samp_ett_foo;
+
 
 bool is_samp_server(packet_info* pinfo);
 #endif //_MAIN_H
