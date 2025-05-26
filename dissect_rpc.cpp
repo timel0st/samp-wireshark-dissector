@@ -3,7 +3,9 @@
 #include "rak_minimal/DS_RangeList.h"
 #include "rak_minimal/StringCompressor.h"
 #include "rpc_def.h"
+
 extern int rpcid_field;
+
 void dissect_samprpc_message_raknet_rpc_inner(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree _U_, void *data _U_, RPCNameMap *rpc_map) {
     guint16 orig_size = tvb_captured_length_remaining(tvb, 0);
     char *original_buffer = (char *)tvb_get_ptr(tvb, 0, orig_size);
